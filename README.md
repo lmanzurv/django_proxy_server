@@ -1,6 +1,6 @@
 django_proxy_server
 ===================
-This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a DMZ. Services are exposed using Django REST Framework. To identify itself, django-proxy-server uses the SECRET_KEY variable defined in settings as its API KEY.
+This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a militarized zone. Services are exposed using Django REST Framework. To identify itself, django-proxy-server uses the SECRET_KEY variable defined in settings as its API KEY.
 
 Quick start
 -----------
