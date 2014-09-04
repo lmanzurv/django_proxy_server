@@ -31,8 +31,8 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 
                 if proxy_server.USER_TOKEN in response and request is not None:
                     request.session[SESSION_KEY] = response[proxy_server.USER_TOKEN]
-                    request.user.pk = response[settings.USER_TOKEN]
-                    del response[settings.USER_TOKEN]
+                    request.user.pk = response[proxy_server.USER_TOKEN]
+                    del response[proxy_server.USER_TOKEN]
 
             elif public and response_token:
                 raise WsInvocationError('A web service cannot be public and expect a response token')
@@ -50,9 +50,9 @@ def invoke_backend_service_as_proxy(method, function_path, json_data=dict(), req
 
         if request is not None:
             headers = proxy_server.RESTFUL_HEADER
-            headers[settings.USER_TOKEN] = request.META.get(proxy_server.HTTP_USER_TOKEN)
-            headers[settings.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
-            headers[settings.API_KEY] = request.META.get(proxy_server.HTTP_API_KEY)
+            headers[proxy_server.USER_TOKEN] = request.META.get(proxy_server.HTTP_USER_TOKEN)
+            headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
+            headers[proxy_server.API_KEY] = request.META.get(proxy_server.HTTP_API_KEY)
             try:
                 conn.request(method, function_path, json.dumps(json_data), headers)
             except:

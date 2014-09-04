@@ -6,14 +6,13 @@ from django.conf import settings
 from importlib import import_module
 import proxy_server
 
-def expose_service(methods):
+def expose_service(methods, public=False):
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             if hasattr(settings, 'PROXY_API_KEYS'):
                 if request.META.get(proxy_server.HTTP_API_KEY) in settings.PROXY_API_KEYS:
                     if hasattr(settings, 'PROXY_TOKEN_VALIDATION_SERVICE'):
-                        if request.META.get(proxy_server.HTTP_USER_TOKEN):
-
+                        if not public and request.META.get(proxy_server.HTTP_USER_TOKEN):
                             try:
                                 dot = settings.PROXY_TOKEN_VALIDATION_SERVICE.rindex('.')
                             except ValueError:
@@ -26,6 +25,8 @@ def expose_service(methods):
                             if response[proxy_server.MESSAGE] == proxy_server.SUCCESS:
                                 request.META[proxy_server.HTTP_USER_TOKEN] = response[proxy_server.USER_TOKEN]
                                 return api_view(methods)(view_func)(request, *args, **kwargs)
+                        else:
+                            return api_view(methods)(view_func)(request, *args, **kwargs)
                     else:
                         return api_view(methods)(view_func)(request, *args, **kwargs)
             raise PermissionDenied
