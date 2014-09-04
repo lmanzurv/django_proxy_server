@@ -1,6 +1,6 @@
 django_proxy_server
 ===================
-This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a DMZ. Services are exposed using Django REST Framework.
+This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a DMZ. Services are exposed using Django REST Framework. To identify itself, django-proxy-server uses the SECRET_KEY variable defined in settings as its API KEY.
 
 Quick start
 -----------
@@ -40,7 +40,9 @@ To expose a service using Django, simply decorate a view with
     
     # The option methods is a list of HTTP methods that can be exposed.
     # For example: GET, POST, PUT, DELETE
-    @expose_service([ methods ])
+    # The option public indicates that the service will be exposed as public,
+    # thus it doesn't require for the header to include a USER_TOKEN value
+    @expose_service([ methods ], public=True)
 
 There are two ways of invoking backend services, from a traditional Django view or from an external device that uses Django as a proxy server. The functions to invoke backend services relies on the helper function generate_service_url.
 
