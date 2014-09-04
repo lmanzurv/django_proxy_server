@@ -12,7 +12,7 @@ def expose_service(methods, public=False):
             if hasattr(settings, 'PROXY_API_KEYS'):
                 if request.META.get(proxy_server.HTTP_API_KEY) in settings.PROXY_API_KEYS:
                     if hasattr(settings, 'PROXY_TOKEN_VALIDATION_SERVICE'):
-                        if not public and request.META.get(proxy_server.HTTP_USER_TOKEN):
+                        if public is False and request.META.get(proxy_server.HTTP_USER_TOKEN):
                             try:
                                 dot = settings.PROXY_TOKEN_VALIDATION_SERVICE.rindex('.')
                             except ValueError:
@@ -25,7 +25,7 @@ def expose_service(methods, public=False):
                             if response[proxy_server.MESSAGE] == proxy_server.SUCCESS:
                                 request.META[proxy_server.HTTP_USER_TOKEN] = response[proxy_server.USER_TOKEN]
                                 return api_view(methods)(view_func)(request, *args, **kwargs)
-                        else:
+                        elif public is True and request.META.get(proxy_server.HTTP_USER_TOKEN) is None:
                             return api_view(methods)(view_func)(request, *args, **kwargs)
                     else:
                         return api_view(methods)(view_func)(request, *args, **kwargs)
