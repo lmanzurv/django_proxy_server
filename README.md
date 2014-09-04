@@ -73,7 +73,7 @@ When using Django as a proxy server, invoke services as follows:
     from proxy_server.backend_services import invoke_backend_service_as_proxy
     import proxy_server
 
-    @expose_service('GET')
+    @expose_service(['GET'])
     def home(request):
         ...
         response = invoke_backend_service_as_proxy('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True))
