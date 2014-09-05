@@ -55,7 +55,7 @@ When using traditional Django views, invoke services as follows:
 
     def function(request):
         ...
-        response = invoke_backend_service('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True))
+        response = invoke_backend_service('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True), request=request)
         ...
 
 The invoke_backend_service receives the following parameters:
@@ -65,6 +65,7 @@ The invoke_backend_service receives the following parameters:
 * request: The request of the Django view with the information of the user and headers
 * response_token: Boolean argument that indicates if a response token is expected. By default, the service expects a token on response.
 * public: Boolean argument that indicates if the accessed service is public. By default, the invoked services are not public.
+* secure: Boolean argument that indicates if the web service connection must be stablished over HTTPS. By default, the connection is created using HTTP.
 
 When using Django as a proxy server, invoke services as follows:
 
@@ -76,7 +77,7 @@ When using Django as a proxy server, invoke services as follows:
     @expose_service(['GET'])
     def home(request):
         ...
-        response = invoke_backend_service_as_proxy('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True))
+        response = invoke_backend_service_as_proxy('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True), secure=True)
         ...
 
 The invoke_backend_service_as_proxy receives the following parameters:
@@ -85,3 +86,4 @@ The invoke_backend_service_as_proxy receives the following parameters:
 * json_data: A dictionary with the body content of the service. Default value: empty dict.
 * request: The request of the Django view with the information of the user and headers
 * response_token: Boolean argument that indicates if a response token is expected. By default, the service expects a token on response.
+* secure: Boolean argument that indicates if the web service connection must be stablished over HTTPS. By default, the connection is created using HTTP.

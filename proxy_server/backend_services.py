@@ -53,9 +53,18 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
     else:
         raise WsInvocationError('No backend host and/or port specified')
 
-def invoke_backend_service_as_proxy(method, function_path, json_data=dict(), request=None, response_token=False):
-    if hasattr(settings, 'BACKEND_HOST') and hasattr(settings, 'BACKEND_PORT'):
-        conn = httplib.HTTPConnection(settings.BACKEND_HOST,settings.BACKEND_PORT)
+def invoke_backend_service_as_proxy(method, function_path, json_data=dict(), request=None, response_token=False, secure=False):
+    if hasattr(settings, 'BACKEND_HOST'):
+        if secure:
+            if hasattr(settings, 'BACKEND_PORT'):
+                conn = httplib.HTTPSConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
+            else:
+                conn = httplib.HTTPSConnection(settings.BACKEND_HOST)
+        else:
+            if hasattr(settings, 'BACKEND_PORT'):
+                conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
+            else:
+                raise WsInvocationError('No port supplied')
 
         if request is not None:
             headers = proxy_server.RESTFUL_HEADER
