@@ -92,7 +92,7 @@ Considerations
 --------------
 The previous annotation and functions depend on the following response structure:
 
-* For response.status_code = 200
+For response.status_code = 200
     
     {
         'user-token':'abc', # If the server returns it
@@ -103,7 +103,7 @@ The previous annotation and functions depend on the following response structure
         }
     }
 
-* For response.status_code != 200
+For response.status_code != 200
     
     {
         'user-token':'abc', # If the server returns it
