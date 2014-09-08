@@ -21,10 +21,14 @@ def expose_service(methods, public=False):
                             val_module = import_module(settings.PROXY_TOKEN_VALIDATION_SERVICE[:dot])
                             val_func = getattr(val_module, settings.PROXY_TOKEN_VALIDATION_SERVICE[dot + 1:])
 
-                            response = val_func(request)
-                            if response[proxy_server.MESSAGE] == proxy_server.SUCCESS:
-                                request.META[proxy_server.HTTP_USER_TOKEN] = response[proxy_server.USER_TOKEN]
-                                return api_view(methods)(view_func)(request, *args, **kwargs)
+                            try:
+                                response = val_func(request)
+                            except:
+                                raise PermissionDenied
+                            
+                            request.META[proxy_server.HTTP_USER_TOKEN] = response[proxy_server.USER_TOKEN]
+                            return api_view(methods)(view_func)(request, *args, **kwargs)
+                        
                         elif public is True and request.META.get(proxy_server.HTTP_USER_TOKEN) is None:
                             return api_view(methods)(view_func)(request, *args, **kwargs)
                     else:

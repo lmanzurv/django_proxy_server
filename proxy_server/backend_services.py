@@ -16,44 +16,49 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             else:
                 raise WsInvocationError('No port supplied')
             
+        headers = proxy_server.RESTFUL_HEADER
+
         if request is not None:
-            headers = proxy_server.RESTFUL_HEADER
+            
             headers[proxy_server.USER_TOKEN] = request.user.pk
             headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
             headers[proxy_server.API_KEY] = settings.SECRET_KEY
 
+        try:
             conn.request(method, function_path, json.dumps(json_data), headers)
-        else:
-            conn.request(method, function_path, json.dumps(json_data), proxy_server.RESTFUL_HEADER)
+        except:
+            raise WsInvocationError('Could not connect to service')
         
         response = conn.getresponse()
+        response_data = response.read()
+        conn.close()
         
+        response_json = json.loads(response_data)
+
         if response.status is 200:
-            response_data = response.read()
-            conn.close()
-            
-            response = json.loads(response_data)
-
-            if not public and not response_token:
-                if response_token and proxy_server.USER_TOKEN not in response:
-                    raise WsResponseError(response[proxy_server.RESPONSE_MESSAGE])
-                
-                if proxy_server.USER_TOKEN in response and request is not None:
-                    request.session[SESSION_KEY] = response[proxy_server.USER_TOKEN]
-                    request.user.pk = response[proxy_server.USER_TOKEN]
-                    del response[proxy_server.USER_TOKEN]
-
-            elif public and response_token:
+            if public == True and response_token == True:
                 raise WsInvocationError('A web service cannot be public and expect a response token')
             
-            return response
+            elif public == False and response_token == True:
+                if proxy_server.USER_TOKEN not in response_json:
+                    raise WsResponseError('Server expected user token in response')
+                
+                if proxy_server.USER_TOKEN in response_json:
+                    if request is not None:
+                        request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
+                        request.user.pk = response_json[proxy_server.USER_TOKEN]
+                        request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
+            
+            return response_json[proxy_server.RESPONSE]
         else:
-            conn.close()
-            raise WsResponseError(response.reason)
+            if proxy_server.ERROR in response_json:
+                raise WsResponseError(response_json[proxy_server.ERROR][proxy_server.MESSAGE])
+            else:
+                raise WsResponseError('Unknown error in backend server')
     else:
         raise WsInvocationError('No backend host and/or port specified')
 
-def invoke_backend_service_as_proxy(method, function_path, json_data=dict(), request=None, response_token=False, secure=False):
+def invoke_backend_service_as_proxy(method, function_path, json_data=dict(), request=None, response_token=True, secure=False):
     if hasattr(settings, 'BACKEND_HOST'):
         if secure:
             if hasattr(settings, 'BACKEND_PORT'):
@@ -66,30 +71,33 @@ def invoke_backend_service_as_proxy(method, function_path, json_data=dict(), req
             else:
                 raise WsInvocationError('No port supplied')
 
+        headers = proxy_server.RESTFUL_HEADER
+
         if request is not None:
-            headers = proxy_server.RESTFUL_HEADER
             headers[proxy_server.USER_TOKEN] = request.META.get(proxy_server.HTTP_USER_TOKEN)
             headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
             headers[proxy_server.API_KEY] = request.META.get(proxy_server.HTTP_API_KEY)
-            try:
-                conn.request(method, function_path, json.dumps(json_data), headers)
-            except:
-                raise WsInvocationError('Could not connect to service')
-        else:
-            conn.request(method, function_path, json.dumps(json_data), proxy_server.RESTFUL_HEADER)
+
+        try:
+            conn.request(method, function_path, json.dumps(json_data), headers)
+        except:
+            raise WsInvocationError('Could not connect to service')
 
         response = conn.getresponse()
+        response_data = response.read()
+        conn.close()
+
+        response_json = json.loads(response_data)
 
         if response.status is 200:
-            response_data = response.read()
-            conn.close()
-            response = json.loads(response_data)
-            if response_token and proxy_server.USER_TOKEN not in response:
-                raise WsResponseError(response[proxy_server.RESPONSE_MESSAGE])
+            if response_token and proxy_server.USER_TOKEN not in response_json:
+                raise WsResponseError('Server expected user token in response')
             
-            return response
+            return response_json
         else:
-            conn.close()
-            raise WsResponseError(response.reason)
+            if proxy_server.ERROR in response_json:
+                raise WsResponseError(response_json[proxy_server.ERROR][proxy_server.MESSAGE])
+            else:
+                raise WsResponseError('Unknown error in backend server')
     else:
         raise WsInvocationError('No backend host and/or port specified')
