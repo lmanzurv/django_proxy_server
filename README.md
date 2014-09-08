@@ -87,3 +87,31 @@ The invoke_backend_service_as_proxy receives the following parameters:
 * request: The request of the Django view with the information of the user and headers
 * response_token: Boolean argument that indicates if a response token is expected. By default, the service expects a token on response.
 * secure: Boolean argument that indicates if the web service connection must be stablished over HTTPS. By default, the connection is created using HTTP.
+
+Considerations
+--------------
+The previous annotation and functions depend on the following response structure:
+
+* For response.status_code = 200
+    
+    {
+        'user-token':'abc', # If the server returns it
+        'expiration-date':'2014-09-09 10:41:54', # Expiration date of the user token.
+                                                 # If the user token is not present, this is not represent either
+        'response':{
+            # Content of the response. This content can also be an array
+        }
+    }
+
+* For response.status_code != 200
+    
+    {
+        'user-token':'abc', # If the server returns it
+        'expiration-date':'2014-09-09 10:41:54', # Expiration date of the user token.
+                                                 # If the user token is not present, this is not represent either
+        'error': {
+            'code': 500, # Or any other code sent by the server. This is specific to the server
+            'type': 'ErrorType', # Type of the error. This is specific to the server
+            'message': 'Error message'
+        }
+    }
