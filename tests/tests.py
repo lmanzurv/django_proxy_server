@@ -9,7 +9,7 @@ from django.test.client import Client
 class ProxyServicesTest(TestCase):
     def test_invoke_backend_service(self):
         c = Client()
-        response = c.get('/test/', **{'HTTP_API_KEY':'^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'HTTP_X_FORWARDED_FOR':'127.0.0.1'})
+        response = c.post('/test/', **{'HTTP_API_KEY':'^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'HTTP_X_FORWARDED_FOR':'127.0.0.1'})
         print 'Invoke backend as proxy response 200:', response.content
 
         try:
@@ -25,7 +25,7 @@ class BackendServicesTest(TestCase):
         service_url = generate_service_url('/login')
         response = invoke_backend_service('POST', service_url, json_data={ 'email':'admin@test.com', 'password':'password' })
         print 'Invoke backend response 200: ', response
-        
+
         try:
             invoke_backend_service('POST', service_url, json_data={ 'email':'admin@test.com' })
         except Exception as e:

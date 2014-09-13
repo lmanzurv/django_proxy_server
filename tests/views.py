@@ -4,7 +4,7 @@ from proxy_server.backend_services import invoke_backend_service_as_proxy
 from proxy_server.helpers import generate_service_url
 import json
 
-@expose_service(['GET'], public=True)
+@expose_service(['POST'], public=True)
 def test(request):
     service_url = generate_service_url('/login')
     response = invoke_backend_service_as_proxy('POST', service_url, json_data={ 'email':'admin@test.com', 'password':'password' }, request=request)
