@@ -8,9 +8,17 @@ from django.test.client import Client
 
 class ProxyServicesTest(TestCase):
     def test_invoke_backend_service(self):
-        c = Client()
+        c = Client(enforce_csrf_checks=True)
+
+        response = c.get('/test_undecorated/')
+        print 'Test undecorated view GET:', response.status_code
+
+        response = c.post('/test_undecorated/')
+        print 'Test undecorated view POST:', response.status_code, response.context['reason']
+
         response = c.post('/test/', **{'HTTP_API_KEY':'^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'HTTP_X_FORWARDED_FOR':'127.0.0.1'})
-        print 'Invoke backend as proxy response 200:', response.content
+        print 'Invoke backend as proxy response 200 cookies:', response.cookies
+        print 'Invoke backend as proxy response 200 content:', response.content
 
         try:
             c.get('/test_error/', **{'HTTP_API_KEY':'^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'HTTP_X_FORWARDED_FOR':'127.0.0.1'})
@@ -18,7 +26,7 @@ class ProxyServicesTest(TestCase):
             print 'Invoke backend as proxy response 500:', str(e)
 
         response = c.get('/test_token_validation/', **{'HTTP_API_KEY':'^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'HTTP_X_FORWARDED_FOR':'127.0.0.1', 'HTTP_USER_TOKEN':'123token'})
-        print 'Invoke backend as proxy response token_validation:', response.content
+        print 'Invoke backend as proxy response token_validation content:', response.content
 
 class BackendServicesTest(TestCase):
     def test_invoke_backend_service(self):
