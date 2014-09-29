@@ -38,46 +38,47 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             raise Exception
 
         response = conn.getresponse()
-        response_data = response.read()
         conn.close()
-
-        try:
-            response_json = json.loads(response_data)
-        except:
-            error_message = 'Unknown response format'
-            raise Exception
-
-        if response.status is 200:
-            if public == True and response_token == True:
-                error_message = 'A web service cannot be public and expect a response token'
-                raise Exception
-
-            elif public == False and response_token == True:
-                if proxy_server.USER_TOKEN not in response_json:
-                    error_message = 'Server expected user token in response'
-                    raise Exception
-
-                if request is not None:
-                    request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
-                    request.user.pk = response_json[proxy_server.USER_TOKEN]
-                    request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
-
-            return response_json[proxy_server.RESPONSE]
-
-        elif response.status is 204:
+        
+        if response.status is 204:
             if response_token:
                 error_message = 'Backend server didn\'t respond with a token'
                 raise Exception
 
-            return None
-
+            return 204, None
+            
         else:
-            if proxy_server.ERROR in response_json:
-                error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
+            try:
+                response_data = response.read()
+                response_json = json.loads(response_data)
+            except:
+                error_message = 'Unknown response format'
                 raise Exception
+
+            if response.status is 200:
+                if public == True and response_token == True:
+                    error_message = 'A web service cannot be public and expect a response token'
+                    raise Exception
+
+                elif public == False and response_token == True:
+                    if proxy_server.USER_TOKEN not in response_json:
+                        error_message = 'Server expected user token in response'
+                        raise Exception
+
+                    if request is not None:
+                        request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
+                        request.user.pk = response_json[proxy_server.USER_TOKEN]
+                        request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
+
+                return 200, response_json[proxy_server.RESPONSE]
+
             else:
-                error_message = 'Unknown error in backend server'
-                raise Exception
+                if proxy_server.ERROR in response_json:
+                    error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
+                    raise Exception
+                else:
+                    error_message = 'Unknown error in backend server'
+                    raise Exception
 
     except:
         if error_message is None:
@@ -91,7 +92,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             }
         }
 
-        return HttpResponseServerError(json.dumps(error), content_type='application/json')
+        return 500, error
 
 def invoke_backend_service_as_proxy(request, method, function_path, json_data=dict(), response_token=True, secure=False):
     error_message = None
@@ -128,37 +129,40 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
         response_data = response.read()
         conn.close()
 
-        try:
-            response_json = json.loads(response_data)
-        except:
-            error_message = 'Unknown response format'
-            raise Exception
+        if response.status is 204:
+            if response_token:
+                error_message = 'Backend server didn\'t respond with a token'
+                raise Exception
 
-        if response.status is 200 or response.status is 204:
-            if response.status is 200:
-                if response_token and proxy_server.USER_TOKEN not in response_json:
-                    error_message = 'Server expected user token in response'
-                    raise Exception
-
-            elif response.status is 204:
-                if response_token:
-                    error_message = 'Backend server didn\'t respond with a token'
-                    raise Exception
-
-            #request.META[proxy_server.CSRF_COOKIE_USED] = True
-
-            resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
+            resp = HttpResponse(status=response.status, content_type='application/json', reason=response.reason)
             for header, value in response.getheaders():
                 resp[header] = value
 
             return resp
         else:
-            if proxy_server.ERROR in response_json:
-                error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
+            try:
+                response_json = json.loads(response_data)
+            except:
+                error_message = 'Unknown response format'
                 raise Exception
+
+            if response.status is 200:
+                if response_token and proxy_server.USER_TOKEN not in response_json:
+                    error_message = 'Server expected user token in response'
+                    raise Exception
+
+                resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
+                for header, value in response.getheaders():
+                    resp[header] = value
+
+                return resp
             else:
-                error_message = 'Unknown error in backend server'
-                raise Exception
+                if proxy_server.ERROR in response_json:
+                    error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
+                    raise Exception
+                else:
+                    error_message = 'Unknown error in backend server'
+                    raise Exception
 
     except:
         if error_message is None:

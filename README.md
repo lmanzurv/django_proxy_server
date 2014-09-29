@@ -64,7 +64,7 @@ When using traditional Django views, invoke services as follows:
 
     def function(request):
         ...
-        response = invoke_backend_service('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True), request=request)
+        status, response = invoke_backend_service('GET', generate_service_url('/get_user', params={ 'username':'proxy_server_admin' }, encrypted=True), request=request)
         ...
 
 The invoke_backend_service receives the following parameters:
@@ -97,7 +97,7 @@ The invoke_backend_service_as_proxy receives the following parameters:
 * response_token: Boolean argument that indicates if a response token is expected. By default, the service expects a token on response.
 * secure: Boolean argument that indicates if the web service connection must be stablished over HTTPS. By default, the connection is created using HTTP.
 
-The invoke_backend_service_as_proxy function generates the following responses:
+The invoke functions generate the following responses:
 
 1. If the server response is a 200 or 204, the response is redirected (the view responds with an exact copy of the server's response).
 2. If the server response is different from 200 or 204, the response has the following structure:
@@ -109,6 +109,8 @@ The invoke_backend_service_as_proxy function generates the following responses:
             'message': error_message
         }
     }
+    
+The difference between invoke_backend_service and invoke_backend_service_as_proxy is that the first responds with a status code and a dictionary, while the second responds with a Django's HttpResponse object.
 
 Considerations
 --------------
