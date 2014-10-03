@@ -38,6 +38,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             raise Exception
 
         response = conn.getresponse()
+        response_data = response.read()
         conn.close()
         
         if response.status is 204:
@@ -49,7 +50,6 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             
         else:
             try:
-                response_data = response.read()
                 response_json = json.loads(response_data)
             except:
                 error_message = 'Unknown response format'
