@@ -7,6 +7,12 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
     error_message = None
 
     try:
+        if public == True and request is not None:
+            error_message = 'A public web service doesn\'t use Django\'s request'
+            raise Exception
+            
+        if response_token == True and request is None:
+            error_message = 'A web service cannot expect a response token and not receive Django\'s request'
 
         if not hasattr(settings, 'BACKEND_HOST'):
             error_message = 'No backend host and/or port specified'
@@ -25,11 +31,11 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
 
         headers = proxy_server.RESTFUL_HEADER
+        headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
+        headers[proxy_server.API_KEY] = settings.SECRET_KEY
 
         if request is not None:
             headers[proxy_server.USER_TOKEN] = request.user.pk
-            headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
-            headers[proxy_server.API_KEY] = settings.SECRET_KEY
 
         try:
             conn.request(method, function_path, json.dumps(json_data), headers)
@@ -42,7 +48,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
         conn.close()
         
         if response.status is 204:
-            if response_token:
+            if response_token == True:
                 error_message = 'Backend server didn\'t respond with a token'
                 raise Exception
 
@@ -56,19 +62,14 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 raise Exception
 
             if response.status is 200:
-                if public == True and response_token == True:
-                    error_message = 'A web service cannot be public and expect a response token'
-                    raise Exception
-
-                elif public == False and response_token == True:
+                if response_token == True:
                     if proxy_server.USER_TOKEN not in response_json:
                         error_message = 'Server expected user token in response'
                         raise Exception
 
-                    if request is not None:
-                        request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
-                        request.user.pk = response_json[proxy_server.USER_TOKEN]
-                        request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
+                    request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
+                    request.user.pk = response_json[proxy_server.USER_TOKEN]
+                    request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
 
                 return 200, response_json[proxy_server.RESPONSE]
 
@@ -130,7 +131,7 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
         conn.close()
 
         if response.status is 204:
-            if response_token:
+            if response_token == True:
                 error_message = 'Backend server didn\'t respond with a token'
                 raise Exception
 
@@ -147,7 +148,7 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
                 raise Exception
 
             if response.status is 200:
-                if response_token and proxy_server.USER_TOKEN not in response_json:
+                if response_token == True and proxy_server.USER_TOKEN not in response_json:
                     error_message = 'Server expected user token in response'
                     raise Exception
 
