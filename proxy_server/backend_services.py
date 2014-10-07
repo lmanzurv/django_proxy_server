@@ -7,8 +7,8 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
     error_message = None
 
     try:
-        if public == True and request is not None:
-            error_message = 'A public web service doesn\'t use Django\'s request'
+        if public == False and request is None:
+            error_message = 'A private web service must receive Django\'s request'
             raise Exception
             
         if response_token == True and request is None:
