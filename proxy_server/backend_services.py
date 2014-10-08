@@ -31,11 +31,11 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
 
         headers = proxy_server.RESTFUL_HEADER
-        headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
         headers[proxy_server.API_KEY] = settings.SECRET_KEY
 
         if request is not None:
             headers[proxy_server.USER_TOKEN] = request.user.pk
+            headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
 
         try:
             conn.request(method, function_path, json.dumps(json_data), headers)
@@ -81,7 +81,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                     error_message = 'Unknown error in backend server'
                     raise Exception
 
-    except:
+    except Exception as e:
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
