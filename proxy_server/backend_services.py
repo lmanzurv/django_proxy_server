@@ -60,16 +60,16 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             except:
                 error_message = 'Unknown response format'
                 raise Exception
+            
+            if response_token == True:
+                request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
+                request.user.pk = response_json[proxy_server.USER_TOKEN]
+                request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
 
             if response.status is 200:
-                if response_token == True:
-                    if proxy_server.USER_TOKEN not in response_json:
-                        error_message = 'Server expected user token in response'
-                        raise Exception
-
-                    request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
-                    request.user.pk = response_json[proxy_server.USER_TOKEN]
-                    request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
+                if response_token == True and proxy_server.USER_TOKEN not in response_json:
+                    error_message = 'Server expected user token in response'
+                    raise Exception
 
                 return 200, response_json[proxy_server.RESPONSE]
 
