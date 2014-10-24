@@ -151,22 +151,16 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
                 if response_token == True and proxy_server.USER_TOKEN not in response_json:
                     error_message = 'Server expected user token in response'
                     raise Exception
-
-                resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
-                for header, value in response.getheaders():
-                    resp[header] = value
-
-                return resp
             else:
-                if proxy_server.ERROR in response_json:
-                    resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
-                    for header, value in response.getheaders():
-                        resp[header] = value
-
-                    return resp
-                else:
+                if proxy_server.ERROR not in response_json:
                     error_message = 'Unknown error in backend server'
                     raise Exception
+
+            resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
+            for header, value in response.getheaders():
+                resp[header] = value
+
+            return resp
 
     except:
         if error_message is None:
