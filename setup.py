@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-proxy-server',
-    version='0.2.7',
+    version='0.2.8',
     packages=find_packages(),
 
     # Dependencies

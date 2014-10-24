@@ -10,7 +10,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
         if public == False and request is None:
             error_message = 'A private web service must receive Django\'s request'
             raise Exception
-            
+
         if response_token == True and request is None:
             error_message = 'A web service cannot expect a response token and not receive Django\'s request'
 
@@ -46,21 +46,21 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
         response = conn.getresponse()
         response_data = response.read()
         conn.close()
-        
+
         if response.status is 204:
             if response_token == True:
                 error_message = 'Backend server didn\'t respond with a token'
                 raise Exception
 
             return 204, None
-            
+
         else:
             try:
                 response_json = json.loads(response_data)
             except:
                 error_message = 'Unknown response format'
                 raise Exception
-            
+
             if response_token == True:
                 request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
                 request.user.pk = response_json[proxy_server.USER_TOKEN]
@@ -159,8 +159,11 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
                 return resp
             else:
                 if proxy_server.ERROR in response_json:
-                    error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
-                    raise Exception
+                    resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
+                    for header, value in response.getheaders():
+                        resp[header] = value
+
+                    return resp
                 else:
                     error_message = 'Unknown error in backend server'
                     raise Exception
