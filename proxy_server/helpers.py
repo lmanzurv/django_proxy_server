@@ -7,7 +7,7 @@ def generate_service_url(function_path, params=None, encrypted=False):
         path_end = str()
         for key, value in params.iteritems():
             if encrypted:
-                value = base64.urlsafe_b64encode(str(value)).replace('=','')
+                value = base64.urlsafe_b64encode(str(value)).replace('=', '')
             else:
                 value = str(value)
 

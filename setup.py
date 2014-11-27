@@ -9,11 +9,11 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-proxy-server',
-    version='0.2.8',
+    version='0.2.12',
     packages=find_packages(),
 
     # Dependencies
-    install_requires = ['Django>=1.6.5', 'djangorestframework>=2.4.1'],
+    install_requires=['Django>=1.6', 'djangorestframework>=2.4.1'],
 
     # Metadata for PyPI
     author='Laura Manzur',

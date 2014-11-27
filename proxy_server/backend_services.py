@@ -7,11 +7,11 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
     error_message = None
 
     try:
-        if public == False and request is None:
+        if public is False and request is None:
             error_message = 'A private web service must receive Django\'s request'
             raise Exception
 
-        if response_token == True and request is None:
+        if response_token is True and request is None:
             error_message = 'A web service cannot expect a response token and not receive Django\'s request'
 
         if not hasattr(settings, 'BACKEND_HOST'):
@@ -47,8 +47,11 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
         response_data = response.read()
         conn.close()
 
-        if response.status is 204:
-            if response_token == True:
+        if response.status == 403:
+            return 403, None
+
+        if response.status == 204:
+            if response_token is True:
                 error_message = 'Backend server didn\'t respond with a token'
                 raise Exception
 
@@ -61,13 +64,13 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 error_message = 'Unknown response format'
                 raise Exception
 
-            if response_token == True:
+            if response_token is True:
                 request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
                 request.user.pk = response_json[proxy_server.USER_TOKEN]
                 request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
 
-            if response.status is 200:
-                if response_token == True and proxy_server.USER_TOKEN not in response_json:
+            if response.status == 200:
+                if response_token is True and proxy_server.USER_TOKEN not in response_json:
                     error_message = 'Server expected user token in response'
                     raise Exception
 
@@ -81,7 +84,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                     error_message = 'Unknown error in backend server'
                     raise Exception
 
-    except Exception as e:
+    except:
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
@@ -130,8 +133,15 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
         response_data = response.read()
         conn.close()
 
-        if response.status is 204:
-            if response_token == True:
+        if response.status == 403:
+            resp = HttpResponse(status=response.status, reason=response.reason)
+            for header, value in response.getheaders():
+                resp[header] = value
+
+            return resp
+
+        if response.status == 204:
+            if response_token is True:
                 error_message = 'Backend server didn\'t respond with a token'
                 raise Exception
 
@@ -147,8 +157,8 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
                 error_message = 'Unknown response format'
                 raise Exception
 
-            if response.status is 200:
-                if response_token == True and proxy_server.USER_TOKEN not in response_json:
+            if response.status == 200:
+                if response_token is True and proxy_server.USER_TOKEN not in response_json:
                     error_message = 'Server expected user token in response'
                     raise Exception
             else:

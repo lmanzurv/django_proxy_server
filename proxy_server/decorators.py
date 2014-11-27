@@ -1,6 +1,6 @@
 from functools import wraps
 from rest_framework.decorators import api_view
-from django.http import HttpResponseServerError
+from django.http import HttpResponse
 from django.conf import settings
 from importlib import import_module
 import proxy_server, json
@@ -12,7 +12,7 @@ def expose_service(methods, public=False):
         def wrapper(request, *args, **kwargs):
             error_message = None
             code = 500
-            
+
             try:
                 if hasattr(settings, 'PROXY_API_KEYS'):
                     if request.META.get(proxy_server.HTTP_API_KEY) in settings.PROXY_API_KEYS:
@@ -33,7 +33,7 @@ def expose_service(methods, public=False):
                                     try:
                                         dot = settings.PROXY_TOKEN_VALIDATION_SERVICE.rindex('.')
                                     except ValueError:
-                                        error_message ='Token validation service not properly configured'
+                                        error_message = 'Token validation service not properly configured'
                                         raise Exception
 
                                     val_module = import_module(settings.PROXY_TOKEN_VALIDATION_SERVICE[:dot])
@@ -43,6 +43,11 @@ def expose_service(methods, public=False):
                                         response = val_func(request)
                                     except Exception as e:
                                         error_message = 'Could not invoke token validation service'
+                                        raise Exception
+
+                                    if response.status_code == 403:
+                                        code = 403
+                                        error_message = 'Token invalid'
                                         raise Exception
 
                                     response_json = json.loads(response.content)
@@ -62,6 +67,7 @@ def expose_service(methods, public=False):
                     raise Exception
 
             except Exception as e:
+                print 'ERROR', e, error_message, code
                 if error_message is None:
                     if e.message is not None:
                         error_message = e.message
@@ -77,7 +83,9 @@ def expose_service(methods, public=False):
                     }
                 }
 
-                return HttpResponseServerError(json.dumps(error), content_type='application/json')
+                print 'ERROR JSON', error
+
+                return HttpResponse(json.dumps(error), content_type='application/json', status=code, reason=error_message)
 
         return wraps(view_func)(wrapper)
     return decorator
