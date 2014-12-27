@@ -67,7 +67,6 @@ def expose_service(methods, public=False):
                     raise Exception
 
             except Exception as e:
-                print 'ERROR', e, error_message, code
                 if error_message is None:
                     if e.message is not None:
                         error_message = e.message
@@ -82,8 +81,6 @@ def expose_service(methods, public=False):
                         'message': error_message
                     }
                 }
-
-                print 'ERROR JSON', error
 
                 return HttpResponse(json.dumps(error), content_type='application/json', status=code, reason=error_message)
 

@@ -13,6 +13,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
 
         if response_token is True and request is None:
             error_message = 'A web service cannot expect a response token and not receive Django\'s request'
+            raise Exception
 
         if not hasattr(settings, 'BACKEND_HOST'):
             error_message = 'No backend host and/or port specified'
@@ -77,26 +78,31 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 return 200, response_json[proxy_server.RESPONSE]
 
             else:
+                code = 500
+                if response.status == 400:
+                    code = 400
+
                 if proxy_server.ERROR in response_json:
                     error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
-                    raise Exception
+                    raise Exception(code)
                 else:
                     error_message = 'Unknown error in backend server'
                     raise Exception
 
-    except:
+    except Exception as e:
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
+        code = e if e is not None else 500
         error = {
             'error': {
-                'code': 500,
+                'code': code,
                 'type': 'ProxyServerError',
                 'message': error_message
             }
         }
 
-        return 500, error
+        return code, error
 
 def invoke_backend_service_as_proxy(request, method, function_path, json_data=dict(), response_token=True, secure=False):
     error_message = None
@@ -161,6 +167,7 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
                 if response_token is True and proxy_server.USER_TOKEN not in response_json:
                     error_message = 'Server expected user token in response'
                     raise Exception
+
             else:
                 if proxy_server.ERROR not in response_json:
                     error_message = 'Unknown error in backend server'
