@@ -78,22 +78,20 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 return 200, response_json[proxy_server.RESPONSE]
 
             else:
-                code = 500
-                if response.status == 400:
-                    code = 400
+                code = response.status
 
                 if proxy_server.ERROR in response_json:
                     error_message = response_json[proxy_server.ERROR][proxy_server.MESSAGE]
                     raise Exception(code)
                 else:
-                    error_message = 'Unknown error in backend server'
-                    raise Exception
+                    error_message = response.reason
+                    raise Exception(code)
 
     except Exception as e:
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
-        code = e if e is not None else 500
+        code = int(str(e)) if int(str(e)) is not None else 500
         error = {
             'error': {
                 'code': code,
@@ -166,11 +164,6 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
             if response.status == 200:
                 if response_token is True and proxy_server.USER_TOKEN not in response_json:
                     error_message = 'Server expected user token in response'
-                    raise Exception
-
-            else:
-                if proxy_server.ERROR not in response_json:
-                    error_message = 'Unknown error in backend server'
                     raise Exception
 
             resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
