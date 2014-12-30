@@ -75,7 +75,11 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                     error_message = 'Server expected user token in response'
                     raise Exception
 
-                return 200, response_json[proxy_server.RESPONSE]
+                result = None
+                if proxy_server.RESPONSE in response_json:
+                    result = response_json[proxy_server.RESPONSE]
+
+                return 200, result
 
             else:
                 code = response.status
