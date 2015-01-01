@@ -65,7 +65,7 @@ def expose_service(methods, public=False):
                                 error_message = 'Method Not Allowed'
                                 raise Exception
 
-                            request.DATA = dict()
+                            setattr(request, 'DATA', dict())
                             if request.body:
                                 request.DATA.update(json.loads(request.body))
 
@@ -81,7 +81,6 @@ def expose_service(methods, public=False):
                     raise Exception
 
             except Exception as e:
-                print e
                 if error_message is None:
                     if e.message is not None:
                         error_message = e.message

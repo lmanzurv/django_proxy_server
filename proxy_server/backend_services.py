@@ -146,6 +146,11 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
             for header, value in response.getheaders():
                 resp[header] = value
 
+            for header in proxy_server.HOP_BY_HOP:
+                del resp[header]
+
+            resp[proxy_server.HEADER_SERVER] = proxy_server.VALUE_SERVER
+
             return resp
 
         if response.status == 204:
@@ -156,6 +161,11 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
             resp = HttpResponse(status=response.status, content_type='application/json', reason=response.reason)
             for header, value in response.getheaders():
                 resp[header] = value
+
+            for header in proxy_server.HOP_BY_HOP:
+                del resp[header]
+
+            resp[proxy_server.HEADER_SERVER] = proxy_server.VALUE_SERVER
 
             return resp
         else:
@@ -173,6 +183,11 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
             resp = HttpResponse(response_data, status=response.status, content_type='application/json', reason=response.reason)
             for header, value in response.getheaders():
                 resp[header] = value
+
+            for header in proxy_server.HOP_BY_HOP:
+                del resp[header]
+
+            resp[proxy_server.HEADER_SERVER] = proxy_server.VALUE_SERVER
 
             return resp
 
