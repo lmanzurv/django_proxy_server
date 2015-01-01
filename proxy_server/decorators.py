@@ -16,6 +16,10 @@ def expose_service(methods, public=False):
             try:
                 if hasattr(settings, 'PROXY_API_KEYS'):
                     if request.META.get(proxy_server.HTTP_API_KEY) in settings.PROXY_API_KEYS:
+                        rest_framework = False
+                        if hasattr(settings, 'REST_FRAMEWORK_SUPPORT'):
+                            rest_framework = settings.REST_FRAMEWORK_SUPPORT
+
                         if hasattr(settings, 'PROXY_TOKEN_VALIDATION_SERVICE'):
                             if public is True:
                                 if request.META.get(proxy_server.HTTP_USER_TOKEN) is not None:
@@ -52,10 +56,20 @@ def expose_service(methods, public=False):
 
                                     response_json = json.loads(response.content)
                                     request.META[proxy_server.HTTP_USER_TOKEN] = response_json[proxy_server.USER_TOKEN]
-                                    return api_view(methods)(view_func)(request, *args, **kwargs)
 
-                        else:
+                        if rest_framework:
                             return api_view(methods)(view_func)(request, *args, **kwargs)
+                        else:
+                            if request.method not in methods:
+                                code = 405
+                                error_message = 'Method Not Allowed'
+                                raise Exception
+
+                            request.DATA = dict()
+                            if request.body:
+                                request.DATA.update(json.loads(request.body))
+
+                            return view_func(request, *args, **kwargs)
 
                     else:
                         error_message = 'Received API KEY not found in server API KEYS set'
@@ -67,6 +81,7 @@ def expose_service(methods, public=False):
                     raise Exception
 
             except Exception as e:
+                print e
                 if error_message is None:
                     if e.message is not None:
                         error_message = e.message
