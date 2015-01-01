@@ -95,7 +95,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
-        code = int(str(e)) if int(str(e)) is not None else 500
+        code = int(str(e)) if e is not None and isinstance(str(e), int) else 500
         error = {
             'error': {
                 'code': code,
