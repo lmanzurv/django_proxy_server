@@ -1,9 +1,11 @@
-django_proxy_server
-===================
-This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a militarized zone. Services are exposed using Django REST Framework. To identify itself, django-proxy-server uses the SECRET_KEY variable defined in settings as its API KEY.
+# django_proxy_server
 
-Quick start
------------
+This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a militarized zone. Services can be exposed using Django REST Framework. To identify itself, django-proxy-server uses the SECRET_KEY variable defined in settings as its API KEY.
+
+Django proxy server can also be used for authentication against a web service. This backend relies on Django's Cache Framework for storing user sessions.
+
+## Quick start
+
 Install using pip or easy_install
 
     $ pip install django-proxy-server
@@ -34,7 +36,7 @@ Add the following options to the settings.py file to configure:
     # The port through which the backend services will be consumed
     BACKEND_PORT = '8000'
 
-Additionally, to avoid Django checking for CSRF token in the requests, add the following middleware at the end of your settings MIDDLEWARE_CLASSES like this:
+Additionally, to avoid Django checking for CSRF token in the requests, add the following middleware at the end of your MIDDLEWARE_CLASSES setting like this:
 
     MIDDLEWARE_CLASSES = (
         ...
@@ -43,8 +45,10 @@ Additionally, to avoid Django checking for CSRF token in the requests, add the f
 
 This middleware checks if the view function was decorated with @expose_service and marks it to avoid CSRF check.
 
-Usage
------------
+## Usage
+
+### Proxy Server
+
 To expose a service using Django, simply decorate a view with
 
     # The option methods is a list of HTTP methods that can be exposed.
@@ -109,11 +113,11 @@ The invoke functions generate the following responses:
             'message': error_message
         }
     }
-    
+
 The difference between invoke_backend_service and invoke_backend_service_as_proxy is that the first responds with a status code and a dictionary, while the second responds with a Django's HttpResponse object.
 
-Considerations
---------------
+#### Considerations
+
 The previous annotation and functions depend on the following response structure:
 
 For response.status_code = 200
@@ -139,3 +143,31 @@ For response.status_code != 200
             'message': 'Error message'
         }
     }
+
+### Authentication
+
+To use Django Proxy Server's authentication backend, add "proxy_server.authentication.auth.ProxyServerBackend" to your AUTHENTICATION_BACKENDS setting, set your CACHES setting to your prefferred backend and add "novtory_admin.middleware.AuthMiddleware" to your MIDDLEWARE_CLASSES setting, like this:
+
+    AUTHENTICATION_BACKENDS = (
+        'proxy_server.authentication.auth.ProxyServerBackend',
+    )
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
+    MIDDLEWARE_CLASSES = (
+        ...
+        'novtory_admin.middleware.AuthMiddleware',
+    )
+
+Currently, Django Proxy Server supports login web service under the path "/login" only. It relies on you can pass the login web service body through the authenticate kwargs, like this:
+
+    # Pass the request so it can be passed to invoke_backend_service function
+    user = auth.authenticate(username=email, password=password, request=request, role=role, platform=platform)
+
+The authentication backend User object uses the email as username and a base64 encoding of the username as id. The user pk is assigned as the token returned by the backend server through invoke_backend_service function.
+
+For the authenticate function to work correctly, the login web service must return a JSON dictionary with email, name and is_active keys. No staff or superuser Users are allowed.

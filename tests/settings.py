@@ -1,6 +1,6 @@
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': '',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
@@ -26,6 +26,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'proxy_server.middleware.DisableCSRF',
+    'novtory_admin.middleware.AuthMiddleware',
 )
 
 SECRET_KEY = 'askjfadl#aksjdkasdl!aksjfkadfl)'
@@ -37,3 +38,13 @@ ROOT_URLCONF = 'urls'
 
 PROXY_API_KEYS = ['^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'http://127.0.0.1:8001/']
 PROXY_TOKEN_VALIDATION_SERVICE = 'tests.rest_api_connection.renew_session'
+
+AUTHENTICATION_BACKENDS = (
+    'proxy_server.authentication.auth.ProxyServerBackend',
+)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
