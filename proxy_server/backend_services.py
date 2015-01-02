@@ -1,4 +1,5 @@
 from django.contrib.auth import SESSION_KEY
+from django.core.cache import cache
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseServerError
 import httplib, json, proxy_server
@@ -66,9 +67,17 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 raise Exception
 
             if response_token is True:
+                user_dict = None
+                if SESSION_KEY in request.session:
+                    user_dict = cache.get(request.session[SESSION_KEY])
+                    cache.delete(request.session[SESSION_KEY])
+
                 request.session[SESSION_KEY] = response_json[proxy_server.USER_TOKEN]
                 request.user.pk = response_json[proxy_server.USER_TOKEN]
                 request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
+
+                if user_dict:
+                    cache.set(request.session[SESSION_KEY], user_dict)
 
             if response.status == 200:
                 if response_token is True and proxy_server.USER_TOKEN not in response_json:
@@ -92,6 +101,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                     raise Exception(code)
 
     except Exception as e:
+        print 'INVOKE ERROR', e
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
