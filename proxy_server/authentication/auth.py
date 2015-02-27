@@ -79,7 +79,16 @@ class User(DjangoUser):
         return list()
 
     def has_perm(self, perm, obj=None):
-        return perm in self.roles
+        for permission in self.permissions:
+            if permission == perm:
+                return True
+        return False
+    def has_perms(self, perm_list, obj=None):
+        for perm in perm_list:
+            for permission in self.permissions:
+                if permission == perm:
+                    return True
+        return False
 
     def to_dict(self):
         result = dict(
@@ -93,5 +102,7 @@ class User(DjangoUser):
             name=self.first_name,
             email=self.email
         )
+        if self.permissions:
+            result.update(permissions=self.permissions)
 
         return result
