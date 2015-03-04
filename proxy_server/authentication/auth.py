@@ -83,7 +83,7 @@ class User(DjangoUser):
 
     def has_perms(self, perm_list, obj=None):
         for perm in perm_list:
-            if perm in self.permissions:
+            if self.has_perm(perm):
                 return True
         return False
 
