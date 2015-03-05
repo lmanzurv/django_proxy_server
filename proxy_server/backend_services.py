@@ -101,7 +101,6 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                     raise Exception(code)
 
     except Exception as e:
-        print 'INVOKE ERROR', e
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
