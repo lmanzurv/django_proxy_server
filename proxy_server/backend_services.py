@@ -2,6 +2,7 @@ from django.contrib.auth import SESSION_KEY
 from django.core.cache import cache
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseServerError
+from proxy_server.response import AJAX_REQUEST
 import httplib, json, proxy_server
 
 def invoke_backend_service(method, function_path, json_data=dict(), request=None, response_token=True, public=False, secure=False):
@@ -36,6 +37,11 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
         headers[proxy_server.API_KEY] = settings.SECRET_KEY
 
         if request is not None:
+            pk= cache.get(AJAX_REQUEST, None)
+            if pk:
+                request.user.pk = pk 
+                cache.delete(AJAX_REQUEST) 
+        
             headers[proxy_server.USER_TOKEN] = request.user.pk
             headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
 
@@ -77,6 +83,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
 
                 if user_dict:
+                    user_dict['pk']= request.user.pk
                     cache.set(request.session[SESSION_KEY], user_dict)
 
             if response.status == 200:
