@@ -25,7 +25,8 @@ class ProxyServicesTest(TestCase):
         except Exception as e:
             print 'Invoke backend as proxy response 500:', str(e)
 
-        response = c.get('/test_token_validation/', **{'HTTP_API_KEY': '^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj', 'HTTP_X_FORWARDED_FOR': '127.0.0.1', 'HTTP_USER_TOKEN': '123token'})
+        response = c.get('/test_token_validation/', **{'HTTP_API_KEY': '^ugfp@+cw!+se1b8kw%!23(sbrzk8f!uzrhqp$s)@67g9f1tdj',
+            'HTTP_X_FORWARDED_FOR': '127.0.0.1', 'HTTP_USER_TOKEN': '123token'})
         print 'Invoke backend as proxy response token_validation content:', response.content
 
 class BackendServicesTest(TestCase):

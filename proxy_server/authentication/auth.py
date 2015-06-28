@@ -68,9 +68,21 @@ class User(DjangoUser):
         self.username = kwargs.pop('username', None)
         self.password = kwargs.pop('password', None)
         self.objects = None
+        self.permissions = list()
 
     def save(self, **kwargs):
-        pass
+        changed = False
+        for name, value in kwargs.iteritems():
+            if name is not 'pk':
+                changed = True
+
+                if name is 'name':
+                    setattr(self, 'first_name', value)
+                else:
+                    setattr(self, name, value)
+
+        if changed:
+            cache.set(self.pk, self.to_dict())
 
     def get_group_permissions(self):
         return list()
@@ -100,5 +112,9 @@ class User(DjangoUser):
             email=self.email,
             permissions=self.permissions
         )
-        
+
+        attrs = [attr for attr in self.__dict__.keys() if not attr.startswith('__') and not attr.endswith('__')]
+        for attr in attrs:
+            result.update({ attr: getattr(self, attr) })
+
         return result

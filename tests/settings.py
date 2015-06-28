@@ -26,7 +26,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'proxy_server.middleware.DisableCSRF',
-    'novtory_admin.middleware.AuthMiddleware',
+    'proxy_server.authentication.middleware.ProxyServerMiddleware',
 )
 
 SECRET_KEY = 'askjfadl#aksjdkasdl!aksjfkadfl)'
@@ -48,3 +48,5 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+REST_FRAMEWORK_SUPPORT = False

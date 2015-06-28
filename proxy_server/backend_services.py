@@ -27,21 +27,20 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
             else:
                 conn = httplib.HTTPSConnection(settings.BACKEND_HOST)
         else:
-            if not hasattr(settings, 'BACKEND_PORT'):
-                error_message = 'No port supplied'
-                raise Exception
-
-            conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
+            if hasattr(settings, 'BACKEND_PORT'):
+                conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
+            else:
+                conn = httplib.HTTPConnection(settings.BACKEND_HOST)
 
         headers = proxy_server.RESTFUL_HEADER
         headers[proxy_server.API_KEY] = settings.SECRET_KEY
 
         if request is not None:
-            pk= cache.get(AJAX_REQUEST, None)
+            pk = cache.get(AJAX_REQUEST, None)
             if pk:
-                request.user.pk = pk 
-                cache.delete(AJAX_REQUEST) 
-        
+                request.user.pk = pk
+                cache.delete(AJAX_REQUEST)
+
             headers[proxy_server.USER_TOKEN] = request.user.pk
             headers[proxy_server.CLIENT_IP] = request.META.get(proxy_server.HTTP_FROM)
 
@@ -83,7 +82,7 @@ def invoke_backend_service(method, function_path, json_data=dict(), request=None
                 request.session[proxy_server.EXPIRATION_DATE] = response_json[proxy_server.EXPIRATION_DATE]
 
                 if user_dict:
-                    user_dict['pk']= request.user.pk
+                    user_dict['pk'] = request.user.pk
                     cache.set(request.session[SESSION_KEY], user_dict)
 
             if response.status == 200:
@@ -136,11 +135,10 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
             else:
                 conn = httplib.HTTPSConnection(settings.BACKEND_HOST)
         else:
-            if not hasattr(settings, 'BACKEND_PORT'):
-                error_message = 'No port supplied'
-                raise Exception
-
-            conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
+            if hasattr(settings, 'BACKEND_PORT'):
+                conn = httplib.HTTPConnection(settings.BACKEND_HOST, settings.BACKEND_PORT)
+            else:
+                conn = httplib.HTTPConnection(settings.BACKEND_HOST)
 
         headers = proxy_server.RESTFUL_HEADER
         headers[proxy_server.USER_TOKEN] = request.META.get(proxy_server.HTTP_USER_TOKEN)
@@ -207,13 +205,14 @@ def invoke_backend_service_as_proxy(request, method, function_path, json_data=di
 
             return resp
 
-    except:
+    except Exception as e:
         if error_message is None:
             error_message = 'Unknown error in service invocation'
 
+        code = int(str(e)) if e is not None and isinstance(str(e), int) else 500
         error = {
             'error': {
-                'code': 500,
+                'code': code,
                 'type': 'ProxyServerError',
                 'message': error_message
             }

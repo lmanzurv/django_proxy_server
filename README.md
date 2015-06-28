@@ -19,6 +19,10 @@ Add "proxy_server" to your INSTALLED_APPS setting like this:
         'proxy_server',
     )
 
+Additionally, you can have Django REST Framework support by adding the following to your settings.py and installing it through pip
+
+    REST_FRAMEWORK_SUPPORT = True
+
 Add the following options to the settings.py file to configure:
 
     PROXY_API_KEYS = [
@@ -160,7 +164,7 @@ To use Django Proxy Server's authentication backend, add "proxy_server.authentic
 
     MIDDLEWARE_CLASSES = (
         ...
-        'novtory_admin.middleware.AuthMiddleware',
+        'proxy_server.authentication.middleware.ProxyServerMiddleware',
     )
 
 Currently, Django Proxy Server supports login web service under the path "/login" only. It relies on you can pass the login web service body through the authenticate kwargs, like this:

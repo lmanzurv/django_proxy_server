@@ -1,5 +1,4 @@
 from functools import wraps
-from rest_framework.decorators import api_view
 from django.http import HttpResponse
 from django.conf import settings
 from importlib import import_module
@@ -27,7 +26,20 @@ def expose_service(methods, public=False):
                                     code = 400
                                     raise Exception
                                 else:
-                                    return api_view(methods)(view_func)(request, *args, **kwargs)
+                                    if rest_framework:
+                                        from rest_framework.decorators import api_view
+                                        return api_view(methods)(view_func)(request, *args, **kwargs)
+                                    else:
+                                        if request.method not in methods:
+                                            code = 405
+                                            error_message = 'Method Not Allowed'
+                                            raise Exception
+
+                                        setattr(request, 'DATA', dict())
+                                        if request.body:
+                                            request.DATA.update(json.loads(request.body))
+
+                                        return view_func(request, *args, **kwargs)
                             else:
                                 if not request.META.get(proxy_server.HTTP_USER_TOKEN):
                                     error_message = 'A private service requires a user token'
@@ -58,6 +70,7 @@ def expose_service(methods, public=False):
                                     request.META[proxy_server.HTTP_USER_TOKEN] = response_json[proxy_server.USER_TOKEN]
 
                         if rest_framework:
+                            from rest_framework.decorators import api_view
                             return api_view(methods)(view_func)(request, *args, **kwargs)
                         else:
                             if request.method not in methods:

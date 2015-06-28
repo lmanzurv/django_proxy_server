@@ -9,17 +9,18 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-proxy-server',
-    version='0.5',
+    version='0.6',
     packages=find_packages(),
 
     # Dependencies
-    install_requires=['Django>=1.6', 'djangorestframework>=2.4.1'],
+    install_requires=['Django>=1.6'],
+    extras_require={'djangorestframework': 'djangorestframework>=2.4.1'},
 
     # Metadata for PyPI
     author='Laura Manzur',
-    author_email='lc.manzur@novcat.com.co',
+    author_email='lmanzurv@gmail.com',
     maintainer='Laura Manzur',
-    maintainer_email='lc.manzur@novcat.com.co',
+    maintainer_email='lmanzurv@gmail.com',
     description='This is a django application to use django as a proxy server between a frontend device/server and a backend server inside a DMZ',
     long_description=README,
     license='Apache License',
