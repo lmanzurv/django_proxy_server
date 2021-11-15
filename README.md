@@ -12,7 +12,7 @@ Install using pip or easy_install
 
     $ easy_install django-proxy-server
 
-Add "proxy_server" to your INSTALLED_APPS setting like this:
+Add `'proxy_server'` to your INSTALLED_APPS setting like this:
 
     INSTALLED_APPS = (
         ...
@@ -47,7 +47,7 @@ Additionally, to avoid Django checking for CSRF token in the requests, add the f
         'proxy_server.middleware.DisableCSRF',
     )
 
-This middleware checks if the view function was decorated with @expose_service and marks it to avoid CSRF check.
+This middleware checks if the view function was decorated with `@expose_service` and marks it to avoid CSRF check.
 
 ## Usage
 
@@ -61,9 +61,9 @@ To expose a service using Django, simply decorate a view with
     # thus it doesn't require for the header to include a USER_TOKEN value
     @expose_service([ methods ], public=True)
 
-There are two ways of invoking backend services, from a traditional Django view or from an external device that uses Django as a proxy server. The functions to invoke backend services relies on the helper function generate_service_url.
+There are two ways of invoking backend services, from a traditional Django view or from an external device that uses Django as a proxy server. The functions to invoke backend services relies on the helper function `generate_service_url`.
 
-The function generate_service_url allows appending parameters to a URL, as well as encrypting them if the kwarg encrypted is set to True (by default, it is False).
+The function `generate_service_url` allows appending parameters to a URL, as well as encrypting them if the kwarg encrypted is set to `True` (by default, it is `False`).
 
 When using traditional Django views, invoke services as follows:
 
@@ -118,7 +118,7 @@ The invoke functions generate the following responses:
         }
     }
 
-The difference between invoke_backend_service and invoke_backend_service_as_proxy is that the first responds with a status code and a dictionary, while the second responds with a Django's HttpResponse object.
+The difference between `invoke_backend_service` and `invoke_backend_service_as_proxy` is that the first responds with a status code and a dictionary, while the second responds with a Django's HttpResponse object.
 
 #### Considerations
 
@@ -129,7 +129,7 @@ For response.status_code = 200
     {
         'user-token':'abc', # If the server returns it
         'expiration-date':'2014-09-09 10:41:54', # Expiration date of the user token.
-                                                 # If the user token is not present, this is not represent either
+                                                 # If the user token is not present, this is not present either
         'response':{
             # Content of the response. This content can also be an array
         }
@@ -140,7 +140,7 @@ For response.status_code != 200
     {
         'user-token':'abc', # If the server returns it
         'expiration-date':'2014-09-09 10:41:54', # Expiration date of the user token.
-                                                 # If the user token is not present, this is not represent either
+                                                 # If the user token is not present, this is not present either
         'error': {
             'code': 500, # Or any other code sent by the server. This is specific to the server
             'type': 'ErrorType', # Type of the error. This is specific to the server
@@ -150,7 +150,7 @@ For response.status_code != 200
 
 ### Authentication
 
-To use Django Proxy Server's authentication backend, add "proxy_server.authentication.auth.ProxyServerBackend" to your AUTHENTICATION_BACKENDS setting, set your CACHES setting to your prefferred backend and add "novtory_admin.middleware.AuthMiddleware" to your MIDDLEWARE_CLASSES setting, like this:
+To use Django Proxy Server's authentication backend, add `'proxy_server.authentication.auth.ProxyServerBackend'` to your AUTHENTICATION_BACKENDS setting, set your CACHES setting to your prefferred backend and add `'proxy_server.authentication.middleware.ProxyServerMiddleware'` to your MIDDLEWARE_CLASSES setting, like this:
 
     AUTHENTICATION_BACKENDS = (
         'proxy_server.authentication.auth.ProxyServerBackend',
@@ -167,11 +167,11 @@ To use Django Proxy Server's authentication backend, add "proxy_server.authentic
         'proxy_server.authentication.middleware.ProxyServerMiddleware',
     )
 
-Currently, Django Proxy Server supports login web service under the path "/login" only. It relies on you can pass the login web service body through the authenticate kwargs, like this:
+Currently, Django Proxy Server supports login web service under the path `/login` only. You can pass the login web service body through the authenticate kwargs, like this:
 
     # Pass the request so it can be passed to invoke_backend_service function
     user = auth.authenticate(username=email, password=password, request=request, role=role, platform=platform)
 
-The authentication backend User object uses the email as username and a base64 encoding of the username as id. The user pk is assigned as the token returned by the backend server through invoke_backend_service function.
+The authentication backend `User` object uses the email as username and a base64 encoding of the username as `id`. The user `pk` is assigned as the token returned by the backend server through `invoke_backend_service` function.
 
-For the authenticate function to work correctly, the login web service must return a JSON dictionary with email, name and is_active keys. No staff or superuser Users are allowed.
+For the authenticate function to work correctly, the login web service must return a JSON dictionary with `email`, `name` and `is_active` keys. No staff or superuser Users are allowed.
